@@ -4,312 +4,699 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestor de Visitas - Luis Cruz</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        
-        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; color: #37352f; }
-        .notion-tab { border-bottom: 2px solid transparent; transition: all 0.2s; }
-        .notion-tab.active { border-bottom-color: #37352f; font-weight: 600; }
-        .notion-card { border: 1px solid #e9e9e7; border-radius: 4px; background: white; }
-        .notion-input { border: 1px solid #e9e9e7; background: #f7f7f5; border-radius: 4px; padding: 4px 8px; outline: none; }
-        .notion-input:focus { background: #ffffff; border-color: #2383e2; }
-        .notion-btn { background: #2383e2; color: white; padding: 6px 12px; border-radius: 4px; font-size: 14px; }
-        .task-input { width: 100%; background: transparent; border: none; border-top: 1px dashed #d1d5db; font-size: 10px; margin-top: 4px; padding-top: 4px; resize: none; color: #6b7280; }
-        
-        /* Ajuste para exportación */
-        #schedule-capture {
-            min-width: 1200px; /* Ancho fijo para asegurar que quepan las 7 columnas en la imagen */
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+            color: #37352f;
+        }
+
+        .notion-tab {
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .notion-tab.active {
+            border-bottom-color: #37352f;
+            font-weight: 600;
+        }
+
+        .notion-card {
+            border: 1px solid #e9e9e7;
+            border-radius: 4px;
             background: white;
         }
-        .capturing .no-export { display: none !important; }
-        .day-visits-list { min-height: 50px; }
+
+        .notion-input {
+            border: 1px solid #e9e9e7;
+            background: #f7f7f5;
+            border-radius: 4px;
+            padding: 4px 8px;
+            outline: none;
+        }
+
+        .notion-input:focus {
+            background: #ffffff;
+            border-color: #2383e2;
+        }
+
+        .notion-btn {
+            background: #2383e2;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .task-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            border-top: 1px dashed #d1d5db;
+            font-size: 10px;
+            margin-top: 4px;
+            padding-top: 4px;
+            resize: none;
+            color: #6b7280;
+        }
+
+        #schedule-capture {
+            min-width: 1200px;
+            background: white;
+        }
+
+        .capturing .no-export {
+            display: none !important;
+        }
+
+        .day-visits-list {
+            min-height: 50px;
+        }
     </style>
 </head>
+
 <body class="p-4">
 
-    <div class="max-w-7xl mx-auto">
-        <header class="mb-6 flex justify-between items-end">
-            <div>
-                <h1 class="text-3xl font-bold">🗓️ Rol de Visitas</h1>
-                <p class="text-blue-600 font-semibold uppercase tracking-widest text-sm">Luis Cruz | Zona Oaxaca</p>
-            </div>
-        </header>
+<div class="max-w-7xl mx-auto">
 
-        <nav class="flex gap-6 border-b mb-6 overflow-x-auto">
-            <button onclick="switchTab('sucursales')" id="tab-sucursales" class="notion-tab active pb-2">Sucursales</button>
-            <button onclick="switchTab('configuracion')" id="tab-configuracion" class="notion-tab pb-2">Configuración</button>
-            <button onclick="switchTab('horario')" id="tab-horario" class="notion-tab pb-2">Horario Actual</button>
-        </nav>
+    <header class="mb-6 flex justify-between items-end">
+        <div>
+            <h1 class="text-3xl font-bold">🗓️ Rol de Visitas</h1>
 
-        <div id="content-sucursales" class="tab-content">
-            <div class="notion-card p-4">
-                <div class="flex gap-2 mb-4">
-                    <input type="text" id="branch-input" placeholder="Nombre de la sucursal..." class="notion-input flex-1">
-                    <button onclick="addBranch()" class="notion-btn">Agregar</button>
-                </div>
-                <div id="branch-list" class="grid grid-cols-2 md:grid-cols-4 gap-2"></div>
-            </div>
+            <p class="text-blue-600 font-semibold uppercase tracking-widest text-sm">
+                Luis Cruz | Zona Oaxaca
+            </p>
         </div>
+    </header>
 
-        <div id="content-configuracion" class="tab-content hidden">
-            <div class="notion-card p-4 space-y-6">
-                <div>
-                    <label class="block font-bold mb-2">Fecha Lunes de inicio:</label>
-                    <input type="date" id="week-start-date" class="notion-input">
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3" id="days-config-container"></div>
-                <div class="flex gap-2">
-                    <button onclick="generateSchedule()" class="notion-btn flex-1 py-3">Generar Nuevo Rol</button>
-                    <button onclick="clearSchedule()" class="bg-red-50 text-red-600 px-4 rounded border border-red-200">Limpiar</button>
-                </div>
-            </div>
-        </div>
+    <nav class="flex gap-6 border-b mb-6 overflow-x-auto">
 
-        <div id="content-horario" class="tab-content hidden">
-            <div class="mb-4 flex justify-between items-center">
-                <p class="text-xs text-gray-500 italic">Los cambios se guardan automáticamente en este navegador.</p>
-                <button onclick="exportToImage()" class="bg-black text-white px-4 py-2 rounded text-sm flex items-center gap-2">
-                    📸 Descargar Imagen Completa
+        <button
+            onclick="switchTab('sucursales')"
+            id="tab-sucursales"
+            class="notion-tab active pb-2">
+            Sucursales
+        </button>
+
+        <button
+            onclick="switchTab('configuracion')"
+            id="tab-configuracion"
+            class="notion-tab pb-2">
+            Configuración
+        </button>
+
+        <button
+            onclick="switchTab('horario')"
+            id="tab-horario"
+            class="notion-tab pb-2">
+            Horario Actual
+        </button>
+
+    </nav>
+
+    <!-- SUCURSALES -->
+
+    <div id="content-sucursales" class="tab-content">
+
+        <div class="notion-card p-4">
+
+            <div class="flex gap-2 mb-4">
+
+                <input
+                    type="text"
+                    id="branch-input"
+                    placeholder="Nombre de la sucursal..."
+                    class="notion-input flex-1">
+
+                <button onclick="addBranch()" class="notion-btn">
+                    Agregar
                 </button>
+
             </div>
-            
-            <div class="overflow-x-auto border rounded-lg bg-white shadow-lg">
-                <div id="schedule-capture" class="p-8">
-                    <div class="flex justify-between items-start border-b-2 border-black pb-4 mb-6">
-                        <div>
-                            <h2 class="text-3xl font-black uppercase tracking-tighter">Plan Semanal de Trabajo</h2>
-                            <p id="current-date-range" class="text-lg font-medium text-gray-600"></p>
-                        </div>
-                        <div class="text-right">
-                            <p class="font-bold text-xl">LUIS CRUZ</p>
-                            <p class="text-blue-600 font-bold uppercase">Zona Oaxaca</p>
-                        </div>
-                    </div>
-                    
-                    <div id="schedule-grid" class="grid grid-cols-7 gap-4">
-                        </div>
-                </div>
-            </div>
+
+            <div id="branch-list" class="grid grid-cols-2 md:grid-cols-4 gap-2"></div>
+
         </div>
+
     </div>
 
-    <div id="toast" class="fixed bottom-4 right-4 bg-gray-900 text-white px-4 py-2 rounded shadow-lg transform translate-y-20 transition-transform duration-300 z-50"></div>
+    <!-- CONFIG -->
 
-    <script>
-        let branches = JSON.parse(localStorage.getItem('branches_oaxaca')) || [];
-        const weekDays = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
-        let db;
+    <div id="content-configuracion" class="tab-content hidden">
 
-        // DB Setup
-        const req = indexedDB.open("OaxacaScheduleDB", 1);
-        req.onupgradeneeded = e => e.target.result.createObjectStore("data", { keyPath: "id" });
-        req.onsuccess = e => { db = e.target.result; loadFromDB(); };
+        <div class="notion-card p-4 space-y-6">
 
-        function switchTab(id) {
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-            document.querySelectorAll('.notion-tab').forEach(t => t.classList.remove('active'));
-            document.getElementById(`content-${id}`).classList.remove('hidden');
-            document.getElementById(`tab-${id}`).classList.add('active');
+            <div>
+
+                <label class="block font-bold mb-2">
+                    Fecha Lunes de inicio:
+                </label>
+
+                <input
+                    type="date"
+                    id="week-start-date"
+                    class="notion-input">
+
+            </div>
+
+            <div
+                class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"
+                id="days-config-container">
+            </div>
+
+            <div class="flex gap-2">
+
+                <button
+                    onclick="generateSchedule()"
+                    class="notion-btn flex-1 py-3">
+                    Generar Nuevo Rol
+                </button>
+
+                <button
+                    onclick="clearSchedule()"
+                    class="bg-red-50 text-red-600 px-4 rounded border border-red-200">
+                    Limpiar
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- HORARIO -->
+
+    <div id="content-horario" class="tab-content hidden">
+
+        <div class="mb-4 flex justify-between items-center">
+
+            <p class="text-xs text-gray-500 italic">
+                Los cambios se guardan automáticamente.
+            </p>
+
+            <button
+                onclick="exportToImage()"
+                class="bg-black text-white px-4 py-2 rounded text-sm flex items-center gap-2">
+
+                📸 Descargar Imagen Completa
+
+            </button>
+
+        </div>
+
+        <div class="overflow-x-auto border rounded-lg bg-white shadow-lg">
+
+            <div id="schedule-capture" class="p-8">
+
+                <div class="flex justify-between items-start border-b-2 border-black pb-4 mb-6">
+
+                    <div>
+
+                        <h2 class="text-3xl font-black uppercase tracking-tighter">
+                            Plan Semanal de Trabajo
+                        </h2>
+
+                        <p
+                            id="current-date-range"
+                            class="text-lg font-medium text-gray-600">
+                        </p>
+
+                    </div>
+
+                    <div class="text-right">
+
+                        <p class="font-bold text-xl">
+                            LUIS CRUZ
+                        </p>
+
+                        <p class="text-blue-600 font-bold uppercase">
+                            Zona Oaxaca
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div id="schedule-grid" class="grid grid-cols-7 gap-4"></div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+    let branches = [];
+
+    const weekDays = [
+        "Lunes",
+        "Martes",
+        "Miércoles",
+        "Jueves",
+        "Viernes",
+        "Sábado",
+        "Domingo"
+    ];
+
+    async function loadBranches() {
+
+        try {
+
+            const response = await fetch('./branches.json');
+
+            branches = await response.json();
+
+            branches = branches.map((b, index) => {
+
+                if(typeof b === "string"){
+
+                    return {
+                        id: index + 1,
+                        name: b
+                    };
+                }
+
+                return b;
+
+            });
+
+            renderBranches();
+
+        } catch (error) {
+
+            console.error('Error cargando branches.json', error);
+
         }
 
-        function addBranch() {
-            const input = document.getElementById('branch-input');
-            if (input.value.trim()) {
-                branches.push({ id: Date.now(), name: input.value.trim() });
-                input.value = '';
-                localStorage.setItem('branches_oaxaca', JSON.stringify(branches));
-                renderBranches();
+    }
+
+    function switchTab(id) {
+
+        document
+            .querySelectorAll('.tab-content')
+            .forEach(c => c.classList.add('hidden'));
+
+        document
+            .querySelectorAll('.notion-tab')
+            .forEach(t => t.classList.remove('active'));
+
+        document
+            .getElementById(`content-${id}`)
+            .classList.remove('hidden');
+
+        document
+            .getElementById(`tab-${id}`)
+            .classList.add('active');
+
+    }
+
+    function addBranch() {
+
+        const input = document.getElementById('branch-input');
+
+        if (input.value.trim()) {
+
+            branches.push({
+                id: Date.now(),
+                name: input.value.trim()
+            });
+
+            input.value = '';
+
+            renderBranches();
+        }
+    }
+
+    function renderBranches() {
+
+        document.getElementById('branch-list').innerHTML = branches.map(b => `
+
+            <div class="notion-card p-2 flex justify-between text-sm">
+
+                <span class="truncate">${b.name}</span>
+
+                <button
+                    onclick="removeBranch(${b.id})"
+                    class="text-gray-300 hover:text-red-500">
+
+                    ✕
+
+                </button>
+
+            </div>
+
+        `).join('');
+
+    }
+
+    function removeBranch(id){
+
+        branches = branches.filter(x => x.id !== id);
+
+        renderBranches();
+
+    }
+
+    function initConfig() {
+
+        const container = document.getElementById('days-config-container');
+
+        container.innerHTML = weekDays.map((day, index) => {
+
+            let defaultCount = 3;
+
+            if(index === 0 || index === 2){
+                defaultCount = 4;
             }
-        }
 
-        function renderBranches() {
-            document.getElementById('branch-list').innerHTML = branches.map(b => `
-                <div class="notion-card p-2 flex justify-between text-sm">
-                    <span class="truncate">${b.name}</span>
-                    <button onclick="branches=branches.filter(x=>x.id!==${b.id});localStorage.setItem('branches_oaxaca',JSON.stringify(branches));renderBranches()" class="text-gray-300 hover:text-red-500">✕</button>
-                </div>
-            `).join('');
-        }
+            if(index === 5){
+                defaultCount = 2;
+            }
 
-        function initConfig() {
-            const container = document.getElementById('days-config-container');
-            container.innerHTML = weekDays.map(day => `
+            if(index === 6){
+                defaultCount = 0;
+            }
+
+            return `
+
                 <div class="bg-gray-50 p-2 rounded border">
-                    <label class="flex items-center gap-2 font-bold text-xs"><input type="checkbox" class="day-check" value="${day}" checked> ${day}</label>
-                    <input type="number" class="notion-input day-count w-full mt-1" value="2" min="0">
-                </div>
-            `).join('');
-            
-            const today = new Date();
-            document.getElementById('week-start-date').value = today.toISOString().split('T')[0];
-        }
 
-        function createVisitEl(name, task = "") {
-            const div = document.createElement('div');
-            div.className = "branch-item p-2 mb-2 bg-white border border-gray-200 rounded shadow-sm relative";
-            const options = branches.map(b => `<option value="${b.name}" ${b.name===name?'selected':''}>${b.name}</option>`).join('');
-            
-            div.innerHTML = `
-                <div class="flex justify-between items-center mb-1">
-                    <select class="no-export w-full font-bold text-[11px] outline-none bg-transparent" onchange="autoSave()">
-                        ${options}
-                    </select>
-                    <div class="export-only hidden font-bold text-[12px]">${name}</div>
-                    <button onclick="this.closest('.branch-item').remove();autoSave()" class="no-export text-red-300 hover:text-red-600 ml-1 text-[10px]">✕</button>
+                    <label class="flex items-center gap-2 font-bold text-xs">
+
+                        <input
+                            type="checkbox"
+                            class="day-check"
+                            value="${day}"
+                            ${defaultCount > 0 ? 'checked' : ''}>
+
+                        ${day}
+
+                    </label>
+
+                    <input
+                        type="number"
+                        class="notion-input day-count w-full mt-1"
+                        value="${defaultCount}"
+                        min="0">
+
                 </div>
-                <textarea class="task-input" placeholder="Pendiente..." oninput="autoSave()">${task}</textarea>
+
             `;
-            return div;
-        }
 
-        function generateSchedule() {
-            const startDate = new Date(document.getElementById('week-start-date').value + "T00:00:00");
-            const grid = document.getElementById('schedule-grid');
-            grid.innerHTML = '';
-            
-            let pool = [...branches].sort(() => Math.random() - 0.5);
-            let bIdx = 0;
+        }).join('');
 
-            weekDays.forEach((day, i) => {
-                const date = new Date(startDate);
-                date.setDate(startDate.getDate() + i);
-                const col = document.createElement('div');
-                col.className = "flex flex-col border-r last:border-0 pr-2";
-                
-                const list = document.createElement('div');
-                list.className = "day-visits-list";
+        const today = new Date();
 
-                if (document.querySelectorAll('.day-check')[i].checked) {
-                    const count = document.querySelectorAll('.day-count')[i].value;
-                    for (let j = 0; j < count; j++) {
-                        if(pool.length > 0) {
-                            list.appendChild(createVisitEl(pool[bIdx % pool.length].name));
-                            bIdx++;
-                        }
+        document.getElementById('week-start-date').value =
+            today.toISOString().split('T')[0];
+
+    }
+
+    function shuffleArray(array){
+
+        return array.sort(() => Math.random() - 0.5);
+
+    }
+
+    function createVisitEl(name, task = "") {
+
+        const div = document.createElement('div');
+
+        div.className =
+            "branch-item p-2 mb-2 bg-white border border-gray-200 rounded shadow-sm relative";
+
+        const options = branches.map(b => `
+
+            <option
+                value="${b.name}"
+                ${b.name===name?'selected':''}>
+
+                ${b.name}
+
+            </option>
+
+        `).join('');
+
+        div.innerHTML = `
+
+            <div class="flex justify-between items-center mb-1">
+
+                <select
+                    class="no-export w-full font-bold text-[11px] outline-none bg-transparent">
+
+                    ${options}
+
+                </select>
+
+                <div class="export-only hidden font-bold text-[12px]">
+                    ${name}
+                </div>
+
+                <button
+                    onclick="this.closest('.branch-item').remove()"
+                    class="no-export text-red-300 hover:text-red-600 ml-1 text-[10px]">
+
+                    ✕
+
+                </button>
+
+            </div>
+
+            <textarea
+                class="task-input"
+                placeholder="Pendiente...">${task}</textarea>
+
+        `;
+
+        return div;
+    }
+
+    function generateSchedule() {
+
+        const startDate =
+            new Date(
+                document.getElementById('week-start-date').value + "T00:00:00"
+            );
+
+        const grid = document.getElementById('schedule-grid');
+
+        grid.innerHTML = '';
+
+        let pool = shuffleArray([...branches]);
+
+        let bIdx = 0;
+
+        weekDays.forEach((day, i) => {
+
+            const date = new Date(startDate);
+
+            date.setDate(startDate.getDate() + i);
+
+            const col = document.createElement('div');
+
+            col.className =
+                "flex flex-col border-r last:border-0 pr-2";
+
+            const list = document.createElement('div');
+
+            list.className = "day-visits-list";
+
+            const enabled =
+                document.querySelectorAll('.day-check')[i].checked;
+
+            if (enabled) {
+
+                const count =
+                    parseInt(
+                        document.querySelectorAll('.day-count')[i].value
+                    );
+
+                for (let j = 0; j < count; j++) {
+
+                    if(pool.length > 0){
+
+                        const branch =
+                            pool[bIdx % pool.length];
+
+                        list.appendChild(
+                            createVisitEl(branch.name)
+                        );
+
+                        bIdx++;
                     }
                 }
-
-                col.innerHTML = `
-                    <div class="border-b-2 border-black mb-2 pb-1">
-                        <p class="font-black text-[11px] uppercase">${day}</p>
-                        <p class="text-[10px] text-gray-500">${date.getDate()}/${date.getMonth()+1}</p>
-                    </div>
-                `;
-                col.appendChild(list);
-                col.innerHTML += `<button onclick="addManual(${i})" class="no-export mt-2 text-gray-400 hover:text-blue-600 text-lg">+</button>`;
-                grid.appendChild(col);
-            });
-            document.getElementById('current-date-range').textContent = "Semana del " + startDate.toLocaleDateString();
-            autoSave();
-            switchTab('horario');
-        }
-
-        function addManual(i) {
-            const list = document.querySelectorAll('.day-visits-list')[i];
-            list.appendChild(createVisitEl(branches[0]?.name || "Nueva"));
-            autoSave();
-        }
-
-        function autoSave() {
-            if (!db) return;
-            const days = [];
-            document.querySelectorAll('.day-visits-list').forEach(list => {
-                const dayVisits = [];
-                list.querySelectorAll('.branch-item').forEach(item => {
-                    dayVisits.push({ name: item.querySelector('select').value, task: item.querySelector('textarea').value });
-                });
-                days.push(dayVisits);
-            });
-            const data = { id: "last", days, range: document.getElementById('current-date-range').textContent, start: document.getElementById('week-start-date').value };
-            db.transaction("data", "readwrite").objectStore("data").put(data);
-        }
-
-        function loadFromDB() {
-            const req = db.transaction("data").objectStore("data").get("last");
-            req.onsuccess = () => {
-                const data = req.result;
-                if (!data) return;
-                document.getElementById('week-start-date').value = data.start;
-                document.getElementById('current-date-range').textContent = data.range;
-                const grid = document.getElementById('schedule-grid');
-                grid.innerHTML = '';
-                
-                weekDays.forEach((day, i) => {
-                    const date = new Date(new Date(data.start + "T00:00:00"));
-                    date.setDate(date.getDate() + i);
-                    const col = document.createElement('div');
-                    col.className = "flex flex-col border-r last:border-0 pr-2";
-                    const list = document.createElement('div');
-                    list.className = "day-visits-list";
-                    data.days[i].forEach(v => list.appendChild(createVisitEl(v.name, v.task)));
-                    col.innerHTML = `<div class="border-b-2 border-black mb-2 pb-1"><p class="font-black text-[11px] uppercase">${day}</p><p class="text-[10px] text-gray-500">${date.getDate()}/${date.getMonth()+1}</p></div>`;
-                    col.appendChild(list);
-                    col.innerHTML += `<button onclick="addManual(${i})" class="no-export mt-2 text-gray-400 hover:text-blue-600 text-lg">+</button>`;
-                    grid.appendChild(col);
-                });
-                switchTab('horario');
             }
-        }
 
-        async function exportToImage(auto*false) {
-            const captureArea = document.getElementById('schedule-capture');
-            document.body.classList.add('capturing');
-            
-            // Reemplazar selects por texto fijo temporalmente
-            const branchItems = captureArea.querySelectorAll('.branch-item');
+            col.innerHTML = `
+
+                <div class="border-b-2 border-black mb-2 pb-1">
+
+                    <p class="font-black text-[11px] uppercase">
+                        ${day}
+                    </p>
+
+                    <p class="text-[10px] text-gray-500">
+                        ${date.getDate()}/${date.getMonth()+1}
+                    </p>
+
+                </div>
+
+            `;
+
+            col.appendChild(list);
+
+            col.innerHTML += `
+
+                <button
+                    onclick="addManual(${i})"
+                    class="no-export mt-2 text-gray-400 hover:text-blue-600 text-lg">
+
+                    +
+
+                </button>
+
+            `;
+
+            grid.appendChild(col);
+
+        });
+
+        document.getElementById('current-date-range').textContent =
+            "Semana del " + startDate.toLocaleDateString();
+
+        switchTab('horario');
+    }
+
+    function addManual(i) {
+
+        const list =
+            document.querySelectorAll('.day-visits-list')[i];
+
+        list.appendChild(
+            createVisitEl(branches[0]?.name || "Nueva")
+        );
+
+    }
+
+    function clearSchedule(){
+
+        document.getElementById('schedule-grid').innerHTML = '';
+
+    }
+
+    async function exportToImage(auto = false) {
+
+        const captureArea =
+            document.getElementById('schedule-capture');
+
+        document.body.classList.add('capturing');
+
+        const branchItems =
+            captureArea.querySelectorAll('.branch-item');
+
+        branchItems.forEach(item => {
+
+            const val =
+                item.querySelector('select').value;
+
+            item.querySelector('.export-only').textContent = val;
+
+            item.querySelector('.export-only')
+                .classList.remove('hidden');
+
+            const ta = item.querySelector('textarea');
+
+            if(ta.value){
+
+                const p = document.createElement('p');
+
+                p.className =
+                    "temp-p text-[9px] text-gray-500 border-t border-dashed mt-1 pt-1";
+
+                p.textContent = ta.value;
+
+                ta.style.display = 'none';
+
+                item.appendChild(p);
+
+            } else {
+
+                ta.style.display = 'none';
+
+            }
+
+        });
+
+        try {
+
+            const canvas = await html2canvas(captureArea, {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                width: captureArea.scrollWidth,
+                height: captureArea.scrollHeight,
+                windowWidth: captureArea.scrollWidth
+            });
+
+            const imageData = canvas.toDataURL("image/png");
+
+            if(auto){
+
+                return imageData;
+
+            }
+
+            const link = document.createElement('a');
+
+            link.download = `ROL-OAXACA-LUIS-CRUZ.png`;
+
+            link.href = imageData;
+
+            link.click();
+
+        } finally {
+
+            document.body.classList.remove('capturing');
+
             branchItems.forEach(item => {
-                const val = item.querySelector('select').value;
-                item.querySelector('.export-only').textContent = val;
-                item.querySelector('.export-only').classList.remove('hidden');
-                
-                const ta = item.querySelector('textarea');
-                if(ta.value) {
-                    const p = document.createElement('p');
-                    p.className = "temp-p text-[9px] text-gray-500 border-t border-dashed mt-1 pt-1";
-                    p.textContent = ta.value;
-                    ta.style.display = 'none';
-                    item.appendChild(p);
-                } else {
-                    ta.style.display = 'none';
-                }
+
+                item.querySelector('.export-only')
+                    .classList.add('hidden');
+
+                item.querySelector('textarea')
+                    .style.display = 'block';
+
+                const p = item.querySelector('.temp-p');
+
+                if(p) p.remove();
+
             });
 
-            try {
-                // Configuración crítica de html2canvas para evitar cortes
-                const canvas = await html2canvas(captureArea, {
-                    scale: 2,
-                    useCORS: true,
-                    logging: false,
-                    width: captureArea.scrollWidth,
-                    height: captureArea.scrollHeight,
-                    windowWidth: captureArea.scrollWidth
-                });
-                
-               const imageData = canvas.toDataURL("image/png");
-
-if(auto){
-    return imageData;
-}
-
-const link = document.createElement('a');
-link.download = `ROL-OAXACA-LUIS-CRUZ.png`;
-link.href = imageData;
-link.click();
-            } finally {
-                document.body.classList.remove('capturing');
-                branchItems.forEach(item => {
-                    item.querySelector('.export-only').classList.add('hidden');
-                    item.querySelector('textarea').style.display = 'block';
-                    const p = item.querySelector('.temp-p');
-                    if(p) p.remove();
-                });
-            }
         }
 
-        window.onload = () => { renderBranches(); initConfig(); };
-    </script>
+    }
+
+    window.onload = async () => {
+
+        await loadBranches();
+
+        initConfig();
+
+        generateSchedule();
+
+    };
+
+</script>
+
 </body>
 </html>
-

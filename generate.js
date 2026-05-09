@@ -15,7 +15,7 @@ const path = require('path');
         }
     });
 
-    const url = 'https://TUUSUARIO.github.io/TUREPO/';
+    const url = 'https://github.com/jenerCruz/rol-visitas/';
 
     await page.goto(url, {
         waitUntil: 'networkidle'
