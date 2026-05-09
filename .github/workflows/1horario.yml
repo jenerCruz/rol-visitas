@@ -1,0 +1,57 @@
+name: Generar horario semanal
+
+on:
+
+  # Ejecutar automáticamente cada sábado
+  schedule:
+    - cron: '0 15 * * 6'
+
+  # Permite ejecutarlo manualmente desde GitHub
+  workflow_dispatch:
+
+jobs:
+
+  generar-horario:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # Descargar repo
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Node.js
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Instalar dependencias
+      - name: Instalar dependencias
+        run: npm install
+
+      # Instalar navegadores Playwright
+      - name: Instalar Playwright
+        run: npx playwright install --with-deps
+
+      # Iniciar servidor local
+      - name: Iniciar servidor
+        run: |
+          npx http-server . -p 8080 &
+          sleep 5
+
+      # Generar imagen PNG
+      - name: Generar horario
+        run: node generate.js
+
+      # Verificar que sí exista imagen
+      - name: Verificar imagen
+        run: ls -lah
+
+      # Enviar Telegram
+      - name: Enviar Telegram
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: node sendTelegram.js
