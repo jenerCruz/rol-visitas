@@ -1,0 +1,34 @@
+const axios = require('axios');
+const fs = require('fs');
+const FormData = require('form-data');
+
+const TOKEN = process.env.TELEGRAM_TOKEN;
+const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+
+(async () => {
+
+    const form = new FormData();
+
+    form.append('chat_id', CHAT_ID);
+
+    form.append(
+        'photo',
+        fs.createReadStream('./horario.png')
+    );
+
+    form.append(
+        'caption',
+        '📅 Rol semanal Luis Cruz'
+    );
+
+    await axios.post(
+        `https://api.telegram.org/bot${TOKEN}/sendPhoto`,
+        form,
+        {
+            headers: form.getHeaders()
+        }
+    );
+
+    console.log('Enviado a Telegram');
+
+})();
